@@ -7,7 +7,8 @@ import "./EmployeeType.css";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
-const API_URL = 'http://localhost:1323/'; 
+import API from "../../../api/apiConfig"
+const API_URL = API.APIALL; 
 const EmployeeType = () => {
 const navigate = useNavigate();
 const [selectAll, setSelectAll] = useState(false);
