@@ -5,6 +5,8 @@ import FilterSidebar from '../../../component/FilterSidebar/FilterSidebar';
 import { Filter,Pencil,CircleX } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { confirmAlert } from 'react-confirm-alert'; 
+import 'react-confirm-alert/src/react-confirm-alert.css'; 
 import API from '../../../api/apiConfig'
 const API_URL = API.APIALL;
 const GROUP_EMPLOYEE_API_URL=API.APIALL;
@@ -23,40 +25,92 @@ const [nhomnhanvien, setNhomnhanvien] = useState([]);
 const [nhanvien,setNhanvien]=useState([]);
 const [group_empData, setGroup_empData] = useState({ IDNhanVien:"",IDNhom:""});
 const [group_emp, setGroup_emp] = useState([]);
+const token = localStorage.getItem('token');
 useEffect(() => {
   fetchGroup();
   fetchGroup_Employee();
   fetchGEmployee();
   }, []);
+  const confirm = () => {
+  return new Promise((resolve) => {
+    confirmAlert({
+      title: 'Xác nhận sửa đổi',
+      message: 'Bạn có chắc chắn muốn sửa đổi thông tin này không?',
+      buttons: [
+        {
+          label: 'Đồng ý',
+          onClick: () => resolve(true),
+        },
+        {
+          label: 'Hủy',
+          onClick: () => resolve(false), 
+        }
+      ]
+    });
+  });
+};
+
 const fetchGEmployee = async () => {
     try {
-      const response = await fetch(`${NHANVIEN_API_URL}user/selectAll`);
+      const response = await fetch(`${NHANVIEN_API_URL}user/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
       const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
       const data = await result.Data;
       setNhanvien(data);
     } catch (error) {
-      console.error('Error fetching employee types:', error);
-    }
-}; 
+            }
+    }; 
 const fetchGroup_Employee = async () => {
     try {
-      const response = await fetch(`${GROUP_EMPLOYEE_API_URL}userGrup/select/`);
+      const response = await fetch(`${GROUP_EMPLOYEE_API_URL}userGrup/select/`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
       const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
       const data = await result.Data;
       setGroup_emp(data);
     } catch (error) {
-      console.error('Error fetching employee types:', error);
+ 
     }
 }; 
 const fetchGroup = async () => {
     try {
-      const response = await fetch(`${API_URL}grup/selectAll`);
+      const response = await fetch(`${API_URL}grup/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
       const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
       const data = await result.Data;
+   
       setNhomnhanvien(data);
       setSelectedItems(data.map(() => false)); 
     } catch (error) {
-      console.error('Error fetching employee types:', error);
+       toast.error(error.message, {
+        position: "top-right",
+      });
     }
 };
 const openInsert = () => {
@@ -116,6 +170,10 @@ const getEmployeeNameById = (id) => {
     const employee = nhanvien.find(item => item.ID === id);
     return employee ? `${employee.Ho} ${employee.Dem} ${employee.Ten}` : '';
 };
+const getGrupNameById = (id) => {
+    const employee = nhomnhanvien.find(item => item.ID === id);
+    return employee ? employee.TenNhom : '';
+};
 const handleChangeGE = (e) => {
     const { name, value } = e.target;
     setGroup_empData(prevData => ({
@@ -125,7 +183,7 @@ const handleChangeGE = (e) => {
 };
 const handleSave = async (e) => {
     e.preventDefault();
-    const isDuplicate = nhomnhanvien.some(item => item.TenNhom.toLowerCase() === nhomnhanvienData.TenNhom.toLowerCase());
+    const isDuplicate = nhomnhanvien && nhomnhanvien.length > 0 ? nhomnhanvien.some(item => item.TenNhom.toLowerCase() === nhomnhanvienData.TenNhom.toLowerCase()):false;
         if (isDuplicate) {
             toast.error('Nhóm hiểm Nhân Viên đã tồn tại!', {
                 position: "top-right",
@@ -136,7 +194,7 @@ const handleSave = async (e) => {
       const newNhomnhanvien = { ...nhomnhanvienData };
       const response= await fetch(`${API_URL}grup/creat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
         body: JSON.stringify(newNhomnhanvien),
       });
        const result = await response.json()
@@ -157,7 +215,8 @@ const handleSave = async (e) => {
 };
 const handleSaveGE = async (e) => {
     e.preventDefault();
-    const isDuplicate = group_emp.some(item => item.IDNhanVien == group_empData.IDNhanVien && item.IDNhom == group_empData.IDNhom);
+    group_empData.IDNhom = editingIdGE
+    const isDuplicate = group_emp.some(item => item.IDNhanVien == group_empData.IDNhanVien && item.IDNhom == editingIdGE);
         if (isDuplicate) {
             toast.error(' Nhân Viên đã thuộc nhóm này!', {
                 position: "top-right",
@@ -168,10 +227,9 @@ const handleSaveGE = async (e) => {
       const newNhomnhanvien = { ...group_empData };
       newNhomnhanvien.IDNhanVien =await parseInt(newNhomnhanvien.IDNhanVien);
       newNhomnhanvien.IDNhom =await parseInt(newNhomnhanvien.IDNhom);
-
       const response= await fetch(`${GROUP_EMPLOYEE_API_URL}userGrup/creat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
         body: JSON.stringify(newNhomnhanvien),
       });
        const result = await response.json()
@@ -179,7 +237,7 @@ const handleSaveGE = async (e) => {
           const errorMessage = await result.Message;
         throw new Error(`${errorMessage}`);
       }
-      toast.success('Nhóm Nhân viên mới đã được tạo thành công!', {
+      toast.success('Nhóm Nhân viên mới đã đượcV tạo thành công!', {
         position: "top-right",
       });
       fetchGroup_Employee(); 
@@ -192,6 +250,8 @@ const handleSaveGE = async (e) => {
 };
 const handleEdit = async (e) => {
     e.preventDefault();
+       const confirmed = await confirm();
+  if (!confirmed) return;
     const isDuplicate = nhomnhanvien.some(item => item.TenNhom.toLowerCase() === nhomnhanvienData.TenNhom.toLowerCase());
         if (isDuplicate) {
             toast.error('Nhóm Nhân Viên đã tồn tại!', {
@@ -204,7 +264,7 @@ const handleEdit = async (e) => {
     try {
       const response = await fetch(`${API_URL}grup/update/?id=${editingId}`, { 
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
         body: JSON.stringify(nhomnhanvienData),
       });
 
@@ -227,9 +287,12 @@ const handleEdit = async (e) => {
 };
 const handleRemove = async (id) => {
     if (!id) return; 
+       const confirmed = await confirm();
+  if (!confirmed) return;
     try {
       const response= await fetch(`${API_URL}grup/delete/?id=${id}`, {
         method: 'DELETE',
+         headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
       });
        const result = await response.json()
       if(result.StatusCode != 200){
@@ -249,15 +312,18 @@ const handleRemove = async (id) => {
 };
 const handleRemoveGE = async (id, idn) => {
     if (!id) return; 
+       const confirmed = await confirm();
+  if (!confirmed) return;
     try {
       await fetch(`${GROUP_EMPLOYEE_API_URL}userGrup/delete/?id=${id}&ids=${idn}`, {
         method: 'DELETE',
+         headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
       });
       toast.success('Nhân viên đã được xóa ra khỏi nhóm thành công!', {
         position: "top-right",
       });
       fetchGroup_Employee(); 
-      closeEditGE(); 
+      //closeEditGE(); 
     } catch (error) {
       toast.error(error.message, {
         position: "top-right",
@@ -280,6 +346,7 @@ const handleRemoveSelected = async () => {
         await Promise.all(selectedIds.map(id =>
             fetch(`${API_URL}/${id}`, {
                 method: 'DELETE',
+                 headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
             })
         ));
         toast.success('Các loại nhân viên đã được xóa thành công!', {
@@ -303,7 +370,7 @@ const handleRemoveSelected = async () => {
           </div>
           <div className="branch-insert">
             <button className='branch-insert-button' onClick={openInsert}> + Thêm Nhóm </button>
-            <button className='branch-insert-button' onClick={openInsertGE}> + Thêm Nhóm Nhân Viên </button>
+            
           </div>
           {insert && (
             <div className='overlay'>
@@ -331,39 +398,7 @@ const handleRemoveSelected = async () => {
               </div>
             </div>
           )}
-          {insertGE && (
-            <div className='overlay'>
-              <div className='employee-type-insert'>
-                <div className='employee-type-insert-insert'>
-                  <div className="employee-type-title-insert">
-                    Thêm Nhóm Nhân Viên
-                  </div>
-                  <div className="employee-type-input-insert">
-                    <form onSubmit={handleSaveGE}>
-                    <div>Tên Nhóm</div>
-                    <select name="IDNhom" onChange={handleChangeGE} value={group_empData.IDNhom}>
-                      <option value="">Chọn Nhóm</option>
-                      {nhomnhanvien.map(item => (
-                      <option key={item.ID}  value={item.ID}>{item.TenNhom}</option>
-                      ))}
-                    </select>
-                    <div>Nhân Viên</div>
-                    <select name="IDNhanVien" onChange={handleChangeGE} value={group_empData.IDNhanVien}>
-                      <option value="">Chọn Nhân Viên</option>
-                      {nhanvien.map(item => (
-                      <option key={item.ID} value={item.ID}>{item.Ho} {item.Dem} {item.Ten}</option>
-                      ))}
-                    </select>
-                      <div className="employee-type-save">
-                        <button className="employee-type-save-save" type="submit">Lưu</button>
-                        <button className="employee-type-save-exit" type="button" onClick={closeInsertGE}>X</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          
           <div className="branch-filter">
             <button className='branch-filter-coponent'><Filter className="filter-icon"/><span>Bộ Lọc</span></button>
             <button className='branch-filter-coponent'><div className="filter-icon"/><span>Tác Vụ</span></button>
@@ -376,7 +411,7 @@ const handleRemoveSelected = async () => {
               <b>ID</b>
               <b>Nhóm Nhân Viên</b>
             </div>
-            {nhomnhanvien.map((item, index) => (
+            {nhomnhanvien && nhomnhanvien.length>0? nhomnhanvien.map((item, index) => (
               <div className='group-format' key={item.ID}>
                 <div>
                   <input type="checkbox" checked={selectedItems[index]} onChange={handleItemChange(index)} />
@@ -427,18 +462,48 @@ const handleRemoveSelected = async () => {
                       <tr key={item.ID}>
                         <td>{index + 1}</td>
                         <td>{getEmployeeNameById(item.IDNhanVien)}</td>
+                        
                         <td><CircleX onClick={() => handleRemoveGE(item.IDNhanVien, item.IDNhom)} /></td>
                       </tr>
                       ))}
                       </tbody>
                     </table>
-                      <button className="employee-type-save-exit" type="button" onClick={closeEditGE}>X</button>
+                    <br />
+                    <button className='branch-insert-button' onClick={openInsertGE}> + Thêm Nhóm Nhân Viên </button>
+                      <button  style={{float: 'right', marginRight:'70px'}} className="employee-type-save-exit" type="button" onClick={closeEditGE} >X</button>
+                      {insertGE && (
+            <div className='overlay'>
+              <div className='employee-type-insert'>
+                <div className='employee-type-insert-insert'>
+                  <div className="employee-type-title-insert">
+                    Thêm Nhóm Nhân Viên
+                  </div>
+                  <div className="employee-type-input-insert">
+                    <form onSubmit={handleSaveGE}>
+                    <div>Tên Nhóm:{getGrupNameById(editingIdGE)}</div>
+                    <div>Nhân Viên</div>
+                    <select name="IDNhanVien" onChange={handleChangeGE} value={group_empData.IDNhanVien}>
+                      <option value="">Chọn Nhân Viên</option>
+                      {nhanvien.map(item => (
+                      <option key={item.ID} value={item.ID}>{item.Ho} {item.Dem} {item.Ten}</option>
+                      ))}
+                    </select>
+                      <div className="employee-type-save">
+                        <button className="employee-type-save-save" type="submit">Lưu</button>
+                        <button className="employee-type-save-exit" type="button" onClick={closeInsertGE}>X</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
                   </div>
               </div>
             </div>
               )}
               </div>
-            ))}
+            )):""}
           </div>
         </div>
       </div>

@@ -14,9 +14,8 @@
 .chart{
     background-color: white;
     border-radius: 15px;
-    width:1150px;
-    padding:30px;
+     padding:30px; 
     margin-bottom: 20px;
     overflow-y: auto;
-    max-width: 100%;
+    width: 100%;
 }

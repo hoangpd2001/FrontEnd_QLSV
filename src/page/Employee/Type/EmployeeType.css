@@ -1,24 +1,23 @@
 .employeetype{
-    height:790px;
+    height:100%;
     background-color: rgb(249,250,250);
 }
 .employee-type-table{
     background-color: white;
     border-radius: 15px;
-    width:1185px;
-    padding:30px;
-    margin-bottom: 20px;
+    width:75%;
+    padding:10px 5px 5px 5px;
     overflow-y: auto;
-    max-width: 100%;
-    height:750px;
+    height:95%;
 }
 .employee-type-table-header{
-    display: flex;
     background-color: white;
-    width:1100px;
+    width:100%;
+    height: 5%;
+    
 }
 .employee-type-search-filter{
-        padding: 0px 20px;
+   float: left;
 }
 .employee-type-search-filter-input{
     background-color: rgb(244,245,246);
@@ -27,10 +26,12 @@
     border-radius: 10px;
     width:150px;
     border:1px solid white; 
+      
 }
 .employee-type-insert{
     border-radius: 10px;
     padding: 0px 20px;
+      float: left;
 }
 .employee-type-insert-button{
     background-color: rgb(36,144,239);
@@ -42,14 +43,15 @@
     
 }
 .employee-type-filter{
-    padding-left: 390px;
-    display: flex;
+    float: right;
 }
 .employee-type-filter-coponent{
     height:35px;
     border-radius: 10px;
     width:150px;
     border:1px solid white;
+    float: left;
+     
 }
 .employee-type-filter-coponent span{
     padding-bottom: 5px;

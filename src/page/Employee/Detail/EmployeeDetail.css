@@ -1,5 +1,6 @@
 .employee-detail{
-    margin-top:60px;
+    height: 100%;
+    width: 100%;
 }
 .arrow-left{
     background-color: white;
@@ -11,7 +12,7 @@
     margin-top: 5px;
 }
 .sidebar{
-    padding-left: 30px;
+    width: 20%;
 }
 .image{
     width:215px;
@@ -55,12 +56,12 @@
 }
 .component{
     background-color: rgb(249,250,250);
-    width:1225px;
-    height:710px;
+    width:80%;
+    height:100%;
     float: right;
 }
 .insert-container{
-    height:750px;
+    height:100% !important;
 }
 .personal-infor{
     background-color: white;

@@ -1,6 +1,5 @@
 .nav {
-    background-color: #f0f0f0;
-    padding: 10px;
+ 
 }
 
 .logo {
@@ -8,23 +7,21 @@
     font-weight: bold;
     color: #333;
 }
-
-ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+nav div {
+    float: left;
 }
 
-li {
-    display: inline-block;
-    margin-right: 10px;
+.navbar-left-navigation{
+    
+    height: 100%;
+    align-items: center;
+    margin: auto;
+    display: flex;
+    justify-content: center;
 }
+
 
 a {
     text-decoration: none;
     color: #333;
-}
-.chevron{
-    height:20px;
-    padding-top: 5px;
 }

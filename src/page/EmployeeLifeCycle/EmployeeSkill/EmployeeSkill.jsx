@@ -6,6 +6,8 @@ import { useState ,useEffect} from 'react';
 import { Filter,Pencil,CircleX } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { confirmAlert } from 'react-confirm-alert'; 
+import 'react-confirm-alert/src/react-confirm-alert.css'; 
 import API from '../../../api/apiConfig'
 const SKILL_API_URL=API.APIALL;
 const SKILL_EMPLOYEE_API_URL=API.APIALL;
@@ -27,26 +29,68 @@ const [skillData,setSkillData]=useState({TenKyNang:"",MoTa:""});
 const [skillemployee,setSkillemployee]=useState([]);
 const [skillemployeeOne,setSkillemployeeOne]=useState([]);
 const [skillemployeeData,setSkillemployeeData]=useState({IDNhanVien:"",IDKyNang:"",MucDo:"",NgayDanhGia:""});
+const token = localStorage.getItem('token');
 useEffect(()=>{
   fetchSkill();
   fetchSkill_Employee();
   fetchSEmployee();
 },[]);
+  const confirm = () => {
+  return new Promise((resolve) => {
+    confirmAlert({
+      title: 'Xác nhận sửa đổi',
+      message: 'Bạn có chắc chắn muốn sửa đổi thông tin này không?',
+      buttons: [
+        {
+          label: 'Đồng ý',
+          onClick: () => resolve(true),
+        },
+        {
+          label: 'Hủy',
+          onClick: () => resolve(false), 
+        }
+      ]
+    });
+  });
+};
+
 const fetchSEmployee = async () => {
   try {
-    const response = await fetch(`${NHANVIEN_API_URL}user/selectAll`);
-    const result = await response.json();
-    const data = await result.Data;
+    const response = await fetch(`${NHANVIEN_API_URL}user/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
     setNhanvien(data);
   } catch (error) {
-    console.error('Error fetching employee types:', error);
+    toast.error(error.message, {
+        position: "top-right",
+      });
   }
 }; 
 const fetchSkill_Employee = async () => {
   try {
-    const response = await fetch(`${SKILL_EMPLOYEE_API_URL}user/skilluser/select/`);
-    const result = await response.json();
-    const data = await result.Data;
+    const response = await fetch(`${SKILL_EMPLOYEE_API_URL}user/skilluser/select/`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
     setSkillemployee(data);
   } catch (error) {
     console.error('Error fetching employee types:', error);
@@ -54,9 +98,19 @@ const fetchSkill_Employee = async () => {
 }; 
 const fetchSkill = async () => {
   try {
-    const response = await fetch(`${SKILL_API_URL}user/skill/selectAll`);
-    const result = await response.json();
-    const data = await result.Data;
+    const response = await fetch(`${SKILL_API_URL}user/skill/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
     setSkill(data);
     setSelectedItems(data.map(() => false)); 
   } catch (error) {
@@ -158,7 +212,7 @@ const getSkillNameById = (id) => {
 const countSkillById = (id) => {
     var number = [];
 
-   number =  skillemployee.filter(item => item.IDNhanVien == id);
+   number = skillemployee && skillemployee.length>0 ? skillemployee.filter(item => item.IDNhanVien == id):0;
   return number ? number.length : 0;
 }
 const handleChangeSE = (e) => {
@@ -181,7 +235,7 @@ const handleSaveS = async (e) => {
     const newNhomnhanvien = { ...skillData };
     const response = await fetch(SKILL_API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
       body: JSON.stringify(newNhomnhanvien),
     });
     const result =await response.json();
@@ -215,7 +269,7 @@ const handleSaveSE = async (e) => {
     newNhomnhanvien.IDKyNang = parseInt(newNhomnhanvien.IDKyNang)
     const response= await fetch(`${SKILL_EMPLOYEE_API_URL}user/skilluser/creat/?id=${newNhomnhanvien.IDNhanVien}&ids=${newNhomnhanvien.IDKyNang}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
       body: JSON.stringify(newNhomnhanvien),
     });
     console.log(newNhomnhanvien);
@@ -238,11 +292,13 @@ const handleSaveSE = async (e) => {
 };
 const handleEditS = async (e) => {
   e.preventDefault();
+      const confirmed = await confirm();
+  if (!confirmed) return;
   if (!editingIdS) return; 
   try {
     const response = await fetch(`${SKILL_API_URL}/${editingIdS}`, { 
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
       body: JSON.stringify(skillData),
     });
     const result =await response.json();
@@ -264,11 +320,13 @@ const handleEditS = async (e) => {
 };
 const handleEditSE = async (e,id, ids) => {
   e.preventDefault();
+      const confirmed = await confirm();
+  if (!confirmed) return;
  skillemployeeData.MucDo = parseInt(skillemployeeData.MucDo)
   try {
     const response = await fetch(`${SKILL_API_URL}user/skilluser/update/?id=${id}&ids=${ids}`, { 
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
       body: JSON.stringify(skillemployeeData),
     });
     console.log(skillemployeeData)
@@ -296,9 +354,12 @@ const handleEditSE = async (e,id, ids) => {
 };
 const handleRemoveS = async (id) => {
   if (!id) return; 
+      const confirmed = await confirm();
+  if (!confirmed) return;
   try {
     const response =  await fetch(`${SKILL_API_URL}/${id}`, {
       method: 'DELETE',
+       headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
     });
     const result =await response.json();
              if (result.StatusCode !=  200) {
@@ -318,9 +379,12 @@ const handleRemoveS = async (id) => {
 };
 const handleRemoveSE = async (id, ids) => {
   if (!id) return; 
+      const confirmed = await confirm();
+  if (!confirmed) return;
   try {
     await fetch(`${SKILL_EMPLOYEE_API_URL}user/skilluser/delete/?id=${id}&ids=${ids}`, {
       method: 'DELETE',
+       headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
     });
     toast.success('Nhân viên đã được xóa kỹ năng thành công!', {
       position: "top-right",
@@ -393,7 +457,7 @@ const formatDate = (isoDateString) => {
             <td><b>Số Kĩ Năng</b></td>
             <b></b>
         </div>
-            {nhanvien.map((item,index) => {
+            { nhanvien && nhanvien.length>0 ?nhanvien.map((item,index) => {
               return (
               <div  className='employee-skill-map-format' key={item.ID}>
                     <td ><input type="checkbox"  checked={selectedItems[index]} onChange={handleItemChange(index)} /></td>
@@ -556,7 +620,7 @@ const formatDate = (isoDateString) => {
               
               </div>
               );
-            })}
+            }):""}
         </div>
         </div>
       </div>

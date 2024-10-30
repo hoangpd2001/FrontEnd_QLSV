@@ -6,6 +6,8 @@ import { Filter } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
+import { confirmAlert } from 'react-confirm-alert'; 
+import 'react-confirm-alert/src/react-confirm-alert.css'; 
 import API from '../../../api/apiConfig'
 const API_URL = API.APIALL;
 
@@ -18,20 +20,50 @@ const EmployeeTitle = () => {
   const [editingId, setEditingId] = useState(null);
   const [chucdanhData, setChucdanhData] = useState({ TenChucDanh: "" });
   const [chucdanh, setChucDanh] = useState([]);
-
+  const token = localStorage.getItem('token');
   useEffect(() => {
     fetchTitle();
   }, []);
+  const confirm = () => {
+  return new Promise((resolve) => {
+    confirmAlert({
+      title: 'Xác nhận sửa đổi',
+      message: 'Bạn có chắc chắn muốn sửa đổi thông tin này không?',
+      buttons: [
+        {
+          label: 'Đồng ý',
+          onClick: () => resolve(true),
+        },
+        {
+          label: 'Hủy',
+          onClick: () => resolve(false), 
+        }
+      ]
+    });
+  });
+};
 
   const fetchTitle = async () => {
     try {
-      const response = await fetch(`${API_URL}title/selectAll`);
+      const response = await fetch(`${API_URL}title/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
       const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
       const data = await result.Data;
       setChucDanh(data);
       setSelectedItems(data.map(() => false));
     } catch (error) {
-      console.error('Error fetching employee titles:', error);
+      toast.error(error.message, {
+        position: "top-right",
+      });
     }
   };
 
@@ -80,7 +112,7 @@ const EmployeeTitle = () => {
 
   const handleSave = async (e) => {
     e.preventDefault(); // Ngăn chặn reload trang
-    const isDuplicate = chucdanh.some(item => item.TenChucDanh.toLowerCase() === chucdanhData.TenChucDanh.toLowerCase());
+    const isDuplicate = chucdanh && chucdanh.length > 0 ? chucdanh.some(item => item.TenChucDanh.toLowerCase() === chucdanhData.TenChucDanh.toLowerCase()):false;
         if (isDuplicate) {
             toast.error('Chức Danh Nhân Viên đã tồn tại!', {
                 position: "top-right",
@@ -91,7 +123,7 @@ const EmployeeTitle = () => {
       const newChucDanh = { ...chucdanhData };
       const response= await fetch(`${API_URL}title/creat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
         body: JSON.stringify(newChucDanh),
       });
       const result =await response.json();
@@ -112,12 +144,14 @@ const EmployeeTitle = () => {
   };
 
   const handleEdit = async (e) => {
-    e.preventDefault(); // Ngăn chặn reload trang
+    e.preventDefault(); 
+        const confirmed = await confirm();
+  if (!confirmed) return;
     if (!editingId) return;
     try {
       const response = await fetch(`${API_URL}title/update/?id=${editingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
         body: JSON.stringify(chucdanhData),
       });
       const result = await response.json();
@@ -140,8 +174,11 @@ const EmployeeTitle = () => {
 
   const handleRemove = async (id) => {
     if (!id) return; 
+        const confirmed = await confirm();
+  if (!confirmed) return;
     try {
       const response =  await fetch(`${API_URL}title/delete/?id=${id}`, {
+         headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
         method: 'DELETE',
       });
         const result = await response.json();
@@ -238,7 +275,7 @@ const EmployeeTitle = () => {
               <b>ID</b>
               <b>Chức Danh</b>
             </div>
-            {chucdanh.map((item, index) => (
+            {chucdanh &&chucdanh.length > 0 ? chucdanh.map((item, index) => (
               <div className='employee-type-format' key={item.ID}>
                 <div>
                   <input type="checkbox" checked={selectedItems[index]} onChange={handleItemChange(index)} />
@@ -273,7 +310,7 @@ const EmployeeTitle = () => {
                   </div>
                 )}
               </div>
-            ))}
+            )):""}
           </div>
         </div>
       </div>

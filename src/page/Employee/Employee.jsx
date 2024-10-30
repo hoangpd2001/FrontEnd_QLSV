@@ -8,6 +8,9 @@ import {Link} from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
+import { confirmAlert } from 'react-confirm-alert'; 
+import 'react-confirm-alert/src/react-confirm-alert.css'; 
+
 import API from '../../api/apiConfig'
 const API_URL = API.APIALL;
 const Employee = ({open,setOpen,onHeaderClick,clickLink,toggleDialog}) => {
@@ -18,7 +21,7 @@ const Employee = ({open,setOpen,onHeaderClick,clickLink,toggleDialog}) => {
   const [edit, setEdit] = useState(false);
   const [editingId, setEditingId] = useState(null); 
   const [employeeData, setEmployeeData] = useState({
-    Ten:"", Dem:"", Ho:"",Email:"",IDLoaiNhanVien:1,IDCapBac:1,NgayBatDau:"",NgayKetThuc:"",  GioiTinh:"", Sdt:"",DiaChi:"",CCCD:"",NgaySinh:""
+    Ten:"", Dem:"", Ho:"",Email:"",IDLoaiNhanVien:"",Pass:"",IDCapBac:"",NgayBatDau:"",NgayKetThuc:"",  GioiTinh:"", Sdt:"",DiaChi:"",CCCD:"",NgaySinh:""
   });
  
   const EMPLOYEETYPE__API_URL =API.APIALL;
@@ -28,16 +31,48 @@ const Employee = ({open,setOpen,onHeaderClick,clickLink,toggleDialog}) => {
   const [level,setLevel] =useState([]);
   const [employee,setEmployee]=useState([]);
     const [employeeShow, setEmployeeShow] = useState([]);
+    const token = localStorage.getItem('token');
   useEffect(() => {
     setOpen(true);
     fetchEmployeeType();
     fetchLevel();
     fetchEmployee();
   }, [clickLink]);
+
+  const confirm = () => {
+  return new Promise((resolve) => {
+    confirmAlert({
+      title: 'Xác nhận sửa đổi',
+      message: 'Bạn có chắc chắn muốn sửa đổi thông tin này không?',
+      buttons: [
+        {
+          label: 'Đồng ý',
+          onClick: () => resolve(true),
+        },
+        {
+          label: 'Hủy',
+          onClick: () => resolve(false), 
+        }
+      ]
+    });
+  });
+};
+
+
   const fetchEmployeeType = async () => {
     try {
-      const response = await fetch(`${EMPLOYEETYPE__API_URL}user/type/selectAll`);
-      const result = await response.json()
+      const response = await fetch(`${EMPLOYEETYPE__API_URL}user/type/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
       const data = await result.Data;
       console.log('Fetched branches:', data); 
       setEmployeetype(data);
@@ -48,9 +83,20 @@ const Employee = ({open,setOpen,onHeaderClick,clickLink,toggleDialog}) => {
   };
   const fetchLevel = async () => {
     try {
-      const response = await fetch(`${LEVEL__API_URL}level/selectAll`);
-      const result = await response.json()
+      const response = await fetch(`${LEVEL__API_URL}level/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
       const data = await result.Data;
+
       console.log('Fetched branches:', data); 
       setLevel(data);
     } catch (error) {
@@ -59,16 +105,27 @@ const Employee = ({open,setOpen,onHeaderClick,clickLink,toggleDialog}) => {
   };
   const fetchEmployee = async () => {
     try {
-      const response = await fetch(`${API_URL}user/selectAll`);
-      const result = await response.json()
+      const response = await fetch(`${API_URL}user/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
       const data = await result.Data;
-      console.log(data);
       setEmployee(data);
       setEmployeeShow(data);
       setSelectedItems(data.map(() => false)); 
       console.log('Rendering EmployeeType component', employee);
     } catch (error) {
-      console.error('Error fetching employee types:', error);
+       toast.error(error.message, {
+        position: "top-right",
+      });
     }
   };
   const openInsert = () => {
@@ -77,7 +134,7 @@ const Employee = ({open,setOpen,onHeaderClick,clickLink,toggleDialog}) => {
   const closeInsert = () => {
     setInsert(false);
     setEmployeeData({
-      Ten:"", Dem:"", Ho:"",Email:"",IDLoaiNhanVien:1,IDCapBac:1,NgayBatDau:"",NgayKetThuc:"",  GioiTinh:"", Sdt:"",DiaChi:"",CCCD:"",NgaySinh:"" }); 
+      Ten:"", Dem:"", Ho:"",Email:"",IDLoaiNhanVien:"",IDCapBac:"",Pass:"",NgayBatDau:"",NgayKetThuc:"",  GioiTinh:"", Sdt:"",DiaChi:"",CCCD:"",NgaySinh:"" }); 
   };
 
   const openEdit = (id) => {
@@ -93,7 +150,7 @@ const fillter= ()=>{
   const closeEdit = () => {
     setEdit(false);
     setEmployeeData({
-      Ten:"", Dem:"", Ho:"",Email:"",IDLoaiNhanVien:1,IDCapBac:1,NgayBatDau:"",NgayKetThuc:"",  GioiTinh:"", Sdt:"",DiaChi:"",CCCD:"",NgaySinh:"" }); 
+      Ten:"", Dem:"", Ho:"",Email:"",IDLoaiNhanVien:"",IDCapBac:"",NgayBatDau:"",NgayKetThuc:"",  GioiTinh:"", Sdt:"",DiaChi:"",CCCD:"",NgaySinh:"" }); 
   };
 
   const handleSelectAllChange = (event) => {
@@ -120,15 +177,16 @@ const fillter= ()=>{
 
   const handleSave = async (e) => {
     e.preventDefault();
+
     try {
       const newEmployee = {
         ...employeeData,
-         IDLoaiNhanVien: parseInt(employeeData.IDLoaiNhanVien, 10),
-          IDCapBac: parseInt(employeeData.IDCapBac, 10)
+         IDLoaiNhanVien: parseInt(employeeData.IDLoaiNhanVien),
+          IDCapBac: parseInt(employeeData.IDCapBac)
       };
      const response =  await fetch(`${API_URL}user/creatUser`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
         body: JSON.stringify(newEmployee),
       });
        const result = await response.json(); 
@@ -155,7 +213,7 @@ const fillter= ()=>{
     try {
         const response = await fetch(`${API_URL}/${id}`, { 
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
             body: JSON.stringify(employeeData),
         });
 
@@ -180,6 +238,7 @@ const fillter= ()=>{
     try {
         await fetch(`${API_URL}/${id}`, {
             method: 'DELETE',
+             headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
         });
         toast.success('Nhân viên đã được xóa thành công!', {
             position: "top-right",
@@ -262,11 +321,12 @@ const fillter= ()=>{
           <input type="text" onChange={handleChange} name="Dem" placeholder="Nhập Tên Đệm" required />
           <input type="text" onChange={handleChange} name="Ten" placeholder="Nhập Tên" required />
           <input type="text" onChange={handleChange} name="Email" placeholder="Nhập Email" required />
+           <input type="text" onChange={handleChange} name="Pass" placeholder="Nhập Mật Khẩu" required />
           <select  name="IDLoaiNhanVien" value={employeeData.IDLoaiNhanVien} onChange={handleChange} required>
             <option value="">Chọn Loại Nhân Viên</option>
-            {employeetype.map(item => (
+            {employeetype&&employeetype.length>0?employeetype.map(item => (
             <option key={item.ID} value={item.ID}>{item.LoaiNhanVien}</option> 
-            ))}
+            )):""}
           </select>
           <input type="text" onChange={handleChange} name="GioiTinh" placeholder="Nhập Giới Tính"required />
           <div>Nhập Ngày Sinh</div>
@@ -274,9 +334,9 @@ const fillter= ()=>{
           <input type="text" onChange={handleChange} name="Sdt" placeholder="Nhập Số Điện Thoại"required />
           <select  name="IDCapBac" value={employeeData.IDCapBac} onChange={handleChange} required>
             <option value="">Chọn Cấp Bậc</option>
-            {level.map(item => (
+            {level&&level?level.map(item => (
             <option key={item.ID} value={item.ID}>{item.TenCapBac}</option>
-            ))}
+            )):""}
           </select>
           <input type="text" onChange={handleChange} name="DiaChi" placeholder="Nhập Nhập Địa Chỉ"required />
           <div>Ngày Nhận Việc</div>
@@ -313,7 +373,7 @@ const fillter= ()=>{
             <b>Ngày Nhận Việc</b>
             <b>Ngày Kết Thúc</b>
         </div>
-            {employeeShow.map((item,index) => {
+            {employeeShow && employeeShow.length>0 ? employeeShow.map((item,index) => {
               return (
               <div  className='format' key={item.ID}>
                     <div ><input type="checkbox"  checked={selectedItems[index]} 
@@ -329,7 +389,7 @@ const fillter= ()=>{
                     <Link to={`/employee/${item.ID}`}><div >{formatDate(item.NgayKetThuc)}</div></Link>
               </div>
               );
-            })}
+            }):""}
         </div>
         </div>
       </div>

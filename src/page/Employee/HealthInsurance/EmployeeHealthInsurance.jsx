@@ -5,6 +5,8 @@ import FilterSidebar from '../../../component/FilterSidebar/FilterSidebar';
 import { Filter } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { confirmAlert } from 'react-confirm-alert'; 
+import 'react-confirm-alert/src/react-confirm-alert.css'; 
 import API from '../../../api/apiConfig'
 const API_URL = API.APIALL; 
 
@@ -18,21 +20,51 @@ const EmployeeHealthInsurance = () => {
     TenBaoHiem: "",NhaCungCap:"",NoiDangKi:"",TyLePhi:""
   });
   const [baohiem, setBaoHiem] = useState([]);
-
+  const token = localStorage.getItem('token');
   useEffect(() => {
     fetchHealthInsurance();
   }, []);
+  const confirm = () => {
+  return new Promise((resolve) => {
+    confirmAlert({
+      title: 'Xác nhận sửa đổi',
+      message: 'Bạn có chắc chắn muốn sửa đổi thông tin này không?',
+      buttons: [
+        {
+          label: 'Đồng ý',
+          onClick: () => resolve(true),
+        },
+        {
+          label: 'Hủy',
+          onClick: () => resolve(false), 
+        }
+      ]
+    });
+  });
+};
 
   const fetchHealthInsurance = async () => {
     try {
-      const response = await fetch(`${API_URL}user/insurance/selectAll`);
+      const response = await fetch(`${API_URL}user/insurance/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
       const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
       const data = await result.Data;
       setBaoHiem(data);
       setSelectedItems(data.map(() => false)); 
       console.log('Fetched health insurances:', data);
     } catch (error) {
-      console.error('Error fetching health insurances:', error);
+       toast.error(error.message, {
+        position: "top-right",
+      });
     }
   };
   const openInsert = () => {
@@ -74,7 +106,7 @@ const EmployeeHealthInsurance = () => {
   };
   const handleSave = async (e) => {
     e.preventDefault();
-    const isDuplicate = baohiem.some(item => item.TenBaoHiem === baohiemData.TenBaoHiem);
+    const isDuplicate = baohiem && baohiem.length>0 ? baohiem.some(item => item.TenBaoHiem === baohiemData.TenBaoHiem):false;
         if (isDuplicate) {
             toast.error('Bảo hiểm Nhân Viên đã tồn tại!', {
                 position: "top-right",
@@ -88,7 +120,7 @@ const EmployeeHealthInsurance = () => {
       newHealthInsurance.TyLePhi = parseInt(newHealthInsurance.TyLePhi)
       const response = await fetch(`${API_URL}user/insurance/creat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
         body: JSON.stringify(newHealthInsurance),
       });
           const result = await response.json()
@@ -109,13 +141,15 @@ const EmployeeHealthInsurance = () => {
   };
   const handleEdit = async (e) => {
     e.preventDefault();
+        const confirmed = await confirm();
+  if (!confirmed) return;
     if (!editingId) return; 
           baohiemData.TyLePhi = parseInt(baohiemData.TyLePhi)
 
     try {
       const response = await fetch(`${API_URL}user/insurance/update/?id=${editingId}`, { 
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
         body: JSON.stringify(baohiemData),
       });
 
@@ -138,9 +172,12 @@ const EmployeeHealthInsurance = () => {
 
   const handleRemove = async (id) => {
     if (!id) return; 
+        const confirmed = await confirm();
+  if (!confirmed) return;
     try {
       const response =  await fetch(`${API_URL}user/insurance/delete/?id=${id}`, {
         method: 'DELETE',
+         headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
       });
          const result = await response.json()
       if(result.StatusCode != 200){
@@ -234,7 +271,7 @@ const EmployeeHealthInsurance = () => {
               <b>Nơi Đăng Kí</b>
               <b>Tỉ Lệ Phí</b>
             </div>
-            {baohiem.map((item, index) => (
+            {baohiem && baohiem.length>0 ?baohiem.map((item, index) => (
               <div className='health-insurance-type-format' key={item.ID}>
                 <div>
                   <input type="checkbox" checked={selectedItems[index]} onChange={handleItemChange(index)} />
@@ -259,7 +296,7 @@ const EmployeeHealthInsurance = () => {
                             <div>Nơi Đăng Ký</div>
                             <input  type="text"  onChange={handleChange}  value={baohiemData.NoiDangKi}  name="NoiDangKi"  required/>
                             <div>Tỉ Lệ Phí</div>
-                            <input  type="text"  onChange={handleChange}  value={baohiemData.TiLePhi}  name="TyLePhi"  required/>
+                            <input  type="text"  onChange={handleChange}  value={baohiemData.TyLePhi}  name="TyLePhi"  required/>
                           </div>
                           <div className="save">
                             <button className="employee-type-save-save" type="submit">Cập Nhật</button>
@@ -272,7 +309,7 @@ const EmployeeHealthInsurance = () => {
                   </div>
                 )}
               </div>
-            ))}
+            )):""}
           </div>
         </div>
       </div>

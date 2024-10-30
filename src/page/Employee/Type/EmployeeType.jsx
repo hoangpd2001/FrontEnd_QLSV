@@ -7,6 +7,8 @@ import "./EmployeeType.css";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
+import { confirmAlert } from 'react-confirm-alert'; 
+import 'react-confirm-alert/src/react-confirm-alert.css'; 
 import API from "../../../api/apiConfig"
 const API_URL = API.APIALL; 
 const EmployeeType = () => {
@@ -18,19 +20,56 @@ const [edit, setEdit] = useState(false);
 const [editingId, setEditingId] = useState(null); 
 const [employeeTypeData, setEmployeeTypeData] = useState({LoaiNhanVien: "" });
 const [employeeTypes, setEmployeeTypes] = useState([]);
+const token = localStorage.getItem('token');
+
   useEffect(() => {
     fetchEmployeeTypes();
   }, []);
+
+  const confirm = () => {
+  return new Promise((resolve) => {
+    confirmAlert({
+      title: 'Xác nhận sửa đổi',
+      message: 'Bạn có chắc chắn muốn sửa đổi thông tin này không?',
+      buttons: [
+        {
+          label: 'Đồng ý',
+          onClick: () => resolve(true),
+        },
+        {
+          label: 'Hủy',
+          onClick: () => resolve(false), 
+        }
+      ]
+    });
+  });
+};
+
+
   const fetchEmployeeTypes = async () => {
     try {
-      const response = await fetch(`${API_URL}user/type/selectAll`);
+     
+    const response = await fetch(`${API_URL}user/type/selectAll`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
       const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
       const data = await result.Data;
       setEmployeeTypes(data);
       setSelectedItems(data.map(() => false)); 
       console.log('Rendering EmployeeType component', employeeTypes);
+    
     } catch (error) {
-      console.error('Error fetching employee types:', error);
+      toast.error(error.message, {
+        position: "top-right",
+      });
     }
   };
   const openInsert = () => {
@@ -71,7 +110,7 @@ const [employeeTypes, setEmployeeTypes] = useState([]);
   };
   const handleSave = async (e) => {
     e.preventDefault();
-    const isDuplicate = employeeTypes.some(item => item.LoaiNhanVien.toLowerCase() === employeeTypeData.LoaiNhanVien.toLowerCase());
+    const isDuplicate = employeeTypes &&employeeTypes.length >0 ? employeeTypes.some(item => item.LoaiNhanVien.toLowerCase() === employeeTypeData.LoaiNhanVien.toLowerCase()):false;
         if (isDuplicate) {
             toast.error('Loại Nhân Viên đã tồn tại!', {
                 position: "top-right",
@@ -84,7 +123,9 @@ const [employeeTypes, setEmployeeTypes] = useState([]);
       };
       const response=  await fetch(`${API_URL}user/type/creat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 
+                    'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(newEmployeeType),
       });
       const result = await response.json()
@@ -105,6 +146,8 @@ const [employeeTypes, setEmployeeTypes] = useState([]);
   };
   const handleEdit = async (e) => {
     e.preventDefault();
+        const confirmed = await confirm();
+  if (!confirmed) return;
         const isDuplicate = employeeTypes.some(item => item.LoaiNhanVien.toLowerCase() == employeeTypeData.LoaiNhanVien.toLowerCase());
         if (isDuplicate) {
             toast.error('Loại Nhân Viên đã tồn tại!', {
@@ -113,11 +156,12 @@ const [employeeTypes, setEmployeeTypes] = useState([]);
             return;
         }
 
+
     if (!editingId) return; 
     try {
       const response = await fetch(`${API_URL}user/type/update/?id=${editingId}`, { 
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
         body: JSON.stringify(employeeTypeData),
       });
       const result = await response.json();
@@ -138,9 +182,12 @@ const [employeeTypes, setEmployeeTypes] = useState([]);
   };
   const handleRemove = async (id) => {
   if (!id) return; 
+      const confirmed = await confirm();
+  if (!confirmed) return;
   try {
       const response = await fetch(`${API_URL}user/type/delete/?id=${id}`, {
           method: 'DELETE',
+           headers: {'Authorization': `Bearer ${token}` },
       });
       const result = await response.json(); 
      if (result.Data == null) {
@@ -192,10 +239,9 @@ return (
       <div className='employee-type-table'>
           <div className="employee-type-table-header">
               <div className="employee-type-search-filter">
-                  <input className="employee-type-search-filter-input" type="text" placeholder='Tìm Kiếm' />
-              </div>
+              <input className="employee-type-search-filter-input" type="text" placeholder='Tìm Kiếm'/></div>
               <div className="branch-insert">
-                <button className='branch-insert-button' onClick={openInsert}> +  Thêm Loại Nhân Viên</button>
+                <button className='branch-insert-button' onClick={openInsert}>+  Thêm Loại Nhân Viên</button>
               </div>
               {insert && (
                   <div className='overlay'>
@@ -239,7 +285,7 @@ return (
                       <b>ID</b>
                       <b>Loại Nhân Viên</b>
                   </div>
-                  {employeeTypes.map((item, index) => (
+                  {employeeTypes && employeeTypes.length>0? employeeTypes.map((item, index) => (
                       <div className='employee-type-format' key={item.ID}>
                           <div>
                               <input type="checkbox" checked={selectedItems[index]} onChange={handleItemChange(index)} />
@@ -274,7 +320,7 @@ return (
                               </div>
                           )}
                       </div>
-                  ))}
+                  )):""}
               </div>
           </div>
       </div>

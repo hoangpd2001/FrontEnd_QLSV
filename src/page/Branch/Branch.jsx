@@ -7,7 +7,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 import API from '../../api/apiConfig'
-
+import { confirmAlert } from 'react-confirm-alert'; 
+import 'react-confirm-alert/src/react-confirm-alert.css'; 
 const Branch = () => {
     const navigate = useNavigate();
     const [selectAll, setSelectAll] = useState(false);
@@ -18,9 +19,28 @@ const Branch = () => {
     const [branchData, setBranchData] = useState({ ChiNhanh: "" });
     const [branch, setBranch] = useState([]);
     const [phongban,setPhongban]=useState([]);
+    const token = localStorage.getItem('token');
     useEffect(() => {
         fetchBranch();
     }, []);
+     const confirm = () => {
+  return new Promise((resolve) => {
+    confirmAlert({
+      title: 'Xác nhận sửa đổi',
+      message: 'Bạn có chắc chắn muốn sửa đổi thông tin này không?',
+      buttons: [
+        {
+          label: 'Đồng ý',
+          onClick: () => resolve(true),
+        },
+        {
+          label: 'Hủy',
+          onClick: () => resolve(false), 
+        }
+      ]
+    });
+  });
+};
     const fetchDepartment = async () => {
         try {
           const response = await fetch(API.APIALL);
@@ -33,14 +53,26 @@ const Branch = () => {
       };
     const fetchBranch = async () => {
         try {
-            const response = await fetch(`${API.APIALL}branch/selectAll`);
-            const result = await response.json();
-            const data = await result.Data;
+            const response = await fetch(`${API.APIALL}branch/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
             setBranch(data); 
             setSelectedItems(Array(data.length).fill(false)); 
             console.log('Rendering Branch component', branch);
         } catch (error) {
-            console.error('Error fetching branches:', error);
+             toast.error(error.message, {
+              position: "top-right",
+      }); 
         }
     };
 
@@ -89,30 +121,34 @@ const Branch = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        const isDuplicate = branch.some(item => item.ChiNhanh === branchData.ChiNhanh);
+        const isDuplicate = branch && branch.length>0? branch.some(item => item.ChiNhanh === branchData.ChiNhanh):false
         if (isDuplicate) {
             toast.error('Chi nhánh đã tồn tại!', {
                 position: "top-right",
             });
+                    
             return;
         }
+              
+
         try {
             const newBranch = {
                 ...branchData,
             };
             const response = await fetch(`${API.APIALL}branch/creat`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
                 body: JSON.stringify(newBranch),
             });
             const createdBranch = await response.json();
              if (createdBranch.StatusCode!=200) {
                 throw new Error(createdBranch.Message);
             }
-            setBranch((prevBranches) => [...prevBranches, createdBranch.Data]);
+            fetchBranch();
             toast.success('Chi Nhánh mới đã được tạo thành công!', {
                 position: "top-right",
             });
+            fetchBranch();
             closeInsert();
         } catch (error) {
             toast.error(error.message, {
@@ -123,12 +159,13 @@ const Branch = () => {
 
     const handleEdit = async (e) => {
         e.preventDefault();
-
+         const confirmed = await confirm();
+  if (!confirmed) return;
         if (!editingId) return; 
         try {
           const response = await fetch(`${API.APIALL}branch/update/?id=${editingId}`, { 
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
             body: JSON.stringify(branchData),
           });
           const result =await response.json();
@@ -150,9 +187,12 @@ const Branch = () => {
       };
     const handleRemove = async (id) => {
         if (!id) return;
+         const confirmed = await confirm();
+  if (!confirmed) return;
         try {
             const response = await fetch(`${API.APIALL}branch/delete/?id=${id}`, {
                 method: 'DELETE',
+                 headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
             });
              const result =await response.json();
              if (result.StatusCode !=  200) {
@@ -175,6 +215,8 @@ const Branch = () => {
     };
     const handleRemoveDepartment = async (id) => {
         if (!id) return; 
+         const confirmed = await confirm();
+  if (!confirmed) return;
         try {
             await fetch(`${API.APIALL}/?ID_ChiNhanh=${id}`, {
                 method: 'DELETE',
@@ -269,7 +311,7 @@ const Branch = () => {
                             <b>ID</b>
                             <b>Tên Chi Nhánh</b>
                         </div>
-                        {branch.map((item, index) => (
+                        {branch && branch.length>0? branch.map((item, index) => (
                             <div className='employee-type-format' key={item.ID}>
                                 <div>
                                     <input type="checkbox" checked={selectedItems[index]} onChange={handleItemChange(index)} />
@@ -304,7 +346,7 @@ const Branch = () => {
                                     </div>
                                 )}
                             </div>
-                        ))}
+                        )):""}
                     </div>
                 </div>
             </div>

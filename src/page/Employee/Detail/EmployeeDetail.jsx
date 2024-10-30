@@ -10,6 +10,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { confirmAlert } from 'react-confirm-alert'; 
+import 'react-confirm-alert/src/react-confirm-alert.css'; 
 import API from '../../../api/apiConfig'
 const EMPLOYEE_API_URL = API.APIALL;
 const EMPLOYEE_TYPE_API_URL=API.APIALL;
@@ -78,6 +80,7 @@ const [hi_employ,setHi_employ]=useState([]);
 const [hi_employData,setHi_employData]=useState({
     IDNhanVien:parseInt(id),IDBaoHiem:0,NgayDong:"",NgayHetHan:""
 });
+const token = localStorage.getItem('token');
 useEffect(() => {
     fetchEmployee();
     fetchEmployeeType();
@@ -92,19 +95,40 @@ useEffect(() => {
     fetchHealth();
     fetchDepartmentAll()
 },[]);
-// useEffect(() => {
-//   if (selectbranch) {
-//     fetchDepartment(selectbranch);
-//   } else {
-//     setDepartment([]); 
-//     setSelectedDepartment("");
-//   }
-// },[selectbranch]);
+const confirm = () => {
+  return new Promise((resolve) => {
+    confirmAlert({
+      title: 'Xác nhận sửa đổi',
+      message: 'Bạn có chắc chắn muốn sửa đổi thông tin này không?',
+      buttons: [
+        {
+          label: 'Đồng ý',
+          onClick: () => resolve(true),
+        },
+        {
+          label: 'Hủy',
+          onClick: () => resolve(false), 
+        }
+      ]
+    });
+  });
+};
+
 const fetchHealth = async () => {
   try {
-    const response = await fetch(`${HEALTH_INSURANCE}user/insurance/selectAll`);
-    const result = await response.json();
-    const data = await result.Data;
+    const response = await fetch(`${HEALTH_INSURANCE}user/insurance/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
     setHealth(data);
   } catch (error) {
     console.error('Error fetching branches:', error);
@@ -112,9 +136,19 @@ const fetchHealth = async () => {
 };
 const fetchHealth_Employee = async () => {
   try {
-    const response = await fetch(`${HEALTH_INSURANCE_EMPLOYEE_API_URL}user/insuranceUser/select/?id=${id}`);
-        const result = await response.json();
-    const data = await result.Data;
+    const response = await fetch(`${HEALTH_INSURANCE_EMPLOYEE_API_URL}user/insuranceUser/select/?id=${id}`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
     if (Array.isArray(data)) {
       setHi_employ(data);
     } else {
@@ -126,9 +160,19 @@ const fetchHealth_Employee = async () => {
 };
 const fetchEducation_Employee = async () => {
   try {
-    const response = await fetch(`${EDUCATION_EMPLOYEE_API_URL}user/education/SelectAll/?id=${id}`);
-        const result = await response.json();
-    const data = await result.Data;
+    const response = await fetch(`${EDUCATION_EMPLOYEE_API_URL}user/education/SelectAll/?id=${id}`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
     if (Array.isArray(data)) {
         setEducation_Employee(data);
       } else {
@@ -140,9 +184,20 @@ const fetchEducation_Employee = async () => {
 };
 const fetchTitle_Employee = async () => {
   try {
-    const response = await fetch(`${TITLE_EMPLOYEE_API_URL}userTitle/selectAll/?id=${id}`);
-    const result = await response.json();
-    const data = await result.Data;
+    const response = await fetch(`${TITLE_EMPLOYEE_API_URL}userTitle/selectAll/?id=${id}`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
+
     if (Array.isArray(data)) {
       setTitle_employee(data);
     } else {
@@ -154,9 +209,19 @@ const fetchTitle_Employee = async () => {
 };
 const fetchDepartment = async (IDChiNhanh) => {
   try {
-    const response = await fetch(`${DEPARTMENT_API_URL}department/selectByBranch/?id=${IDChiNhanh}`);
-    const result = await response.json();
-    const data = await result.Data;
+    const response = await fetch(`${DEPARTMENT_API_URL}department/selectByBranch/?id=${IDChiNhanh}`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
     setDepartment(data);
   } catch (error) {
     console.error('Error fetching branches:', error);
@@ -164,9 +229,19 @@ const fetchDepartment = async (IDChiNhanh) => {
 };
 const fetchDepartmentAll = async () => {
   try {
-    const response = await fetch(`${DEPARTMENT_API_URL}department/selectAll`);
-    const result = await response.json();
-    const data = await result.Data;
+    const response = await fetch(`${DEPARTMENT_API_URL}department/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
     setDepartmentAll(data);
   } catch (error) {
     console.error('Error fetching branches:', error);
@@ -174,9 +249,19 @@ const fetchDepartmentAll = async () => {
 };
 const fetchTitle = async () => {
   try {
-    const response = await fetch(`${TITLE_API_URL}title/selectAll`);
-        const result = await response.json();
-    const data = await result.Data;
+    const response = await fetch(`${TITLE_API_URL}title/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
     setTitle(data);
   } catch (error) {
     console.error('Error fetching branches:', error);
@@ -184,9 +269,19 @@ const fetchTitle = async () => {
 };
 const fetchBranches = async () => {
   try {
-    const response = await fetch(`${BRANCH_API_URL}branch/selectAll`);
-        const result = await response.json();
-    const data = await result.Data;
+    const response = await fetch(`${BRANCH_API_URL}branch/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
     setBranch(data);
   } catch (error) {
     console.error('Error fetching branches:', error);
@@ -194,9 +289,19 @@ const fetchBranches = async () => {
 };
 const fetchRelative = async () => {
   try {
-    const response = await fetch(`${RELATIVE_API_URL}user/relative/select/?id=${id}`);
-        const result = await response.json();
-    const data = await result.Data;
+    const response = await fetch(`${RELATIVE_API_URL}user/relative/select/?id=${id}`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
     if (data && data.length > 0) {
       setErelativeData({ ...data[0], IDNhanVien: id });
     }
@@ -206,9 +311,19 @@ const fetchRelative = async () => {
 };
 const fetchEmployeeType = async () => {
     try {
-      const response = await fetch(`${EMPLOYEE_TYPE_API_URL}user/type/selectAll`);
-          const result = await response.json();
-    const data = await result.Data;
+      const response = await fetch(`${EMPLOYEE_TYPE_API_URL}user/type/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
       setEmployeetype(data);
     } catch (error) {
       console.error('Error fetching branches:', error);
@@ -216,9 +331,19 @@ const fetchEmployeeType = async () => {
 };
 const fetchLevel = async () => {
     try {
-      const response = await fetch(`${LEVEL__API_URL}level/selectAll`);
-          const result = await response.json();
-    const data = await result.Data;
+      const response = await fetch(`${LEVEL__API_URL}level/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
       setLevel(data);
     } catch (error) {
       console.error('Error fetching branches:', error);
@@ -227,9 +352,19 @@ const fetchLevel = async () => {
 
 const fetchEmployee = async () => {
     try {
-      const response = await fetch(`${EMPLOYEE_API_URL}user/selectAll`);
+      const response = await fetch(`${EMPLOYEE_API_URL}user/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
       const result = await response.json();
-    const data = await result.Data;
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
       const employee = data.find((e) => e.ID == id); 
       employee.NgaySinh = formatDate(employee.NgaySinh)
       employee.NgayBatDau = formatDate(employee.NgayBatDau)
@@ -242,7 +377,9 @@ const fetchEmployee = async () => {
         console.error('Employee not found');
       }
     } catch (error) {
-      console.error('Error fetching employees:', error);
+       toast.error(error.message, {
+        position: "top-right",
+      });
     }
 };
 const [click1,setClick1]=useState(false);
@@ -367,6 +504,7 @@ const handleSave = async (e) => {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(employeeInfor),
         });
@@ -388,9 +526,12 @@ const drop =()=>{
 };
 const handleDelete = async (e) => {
   e.preventDefault();
+     const confirmed = await confirm();
+  if (!confirmed) return;
   try {
       const employeeResponse = await fetch(`${EMPLOYEE_API_URL}/${id}`, {
           method: 'DELETE',
+           headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
       });
       await handleDeleteER();
           const result =await employeeResponse.json();
@@ -475,7 +616,7 @@ const handleAddER = async () => {
     const newerelativeData = { ...erelativeData };
     const response= await fetch(`${RELATIVE_API_URL}user/relative/creat/?id=${id}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
       body: JSON.stringify(newerelativeData),
     });
         const result =await response.json();
@@ -483,7 +624,7 @@ const handleAddER = async () => {
             const errorMessage = await result.Message;
             throw new Error(`${errorMessage}`);
           }
-    toast.success('Nhóm Nhân viên mới đã được tạo thành công!', {
+    toast.success('Liên lạc khẩn cấp đã được tạo thành công!', {
       position: "top-right",
     });
     fetchRelative(); 
@@ -494,11 +635,14 @@ const handleAddER = async () => {
   }
 };
 const handleEditER = async () => {
+     const confirmed = await confirm();
+  if (!confirmed) return;
   try {
     const response = await fetch(`${RELATIVE_API_URL}user/relative/update/?id=${erelativeData.IDNhanVien}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(erelativeData),
 
@@ -520,6 +664,8 @@ const handleEditER = async () => {
   }
 };
 const handleDeleteER = async () => {
+     const confirmed = await confirm();
+  if (!confirmed) return;
   if (!erelativeData.id) { 
       toast.error('ID người thân không hợp lệ');
       return;
@@ -527,6 +673,7 @@ const handleDeleteER = async () => {
   try {
       const response = await fetch(`${RELATIVE_API_URL}/${erelativeData.id}`, {
           method: 'DELETE',
+           headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
       });
 
           const result =await response.json();
@@ -589,7 +736,7 @@ const handleAddTE = async (e) => {
     const newtitle_employeeData =await { ...title_employeeData,IDNhanVien:parseInt(id) };
     const response = await fetch(`${TITLE_EMPLOYEE_API_URL}userTitle/creat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
       body: JSON.stringify(newtitle_employeeData),
     });
        
@@ -611,7 +758,10 @@ const handleAddTE = async (e) => {
   }
 };
 const handleEditTE = async (e) => {
+
   e.preventDefault();
+     const confirmed = await confirm();
+  if (!confirmed) return;
   title_employeeData.NgayBatDau = formatDate(title_employeeData.NgayBatDau)
   title_employeeData.NgayKetThuc = formatDate(title_employeeData.NgayKetThuc)
 
@@ -620,6 +770,7 @@ const handleEditTE = async (e) => {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(title_employeeData),
     });
@@ -643,14 +794,13 @@ const handleEditTE = async (e) => {
 };
 const handleDeleteTE = async (e) => {
     e.preventDefault();
+       const confirmed = await confirm();
+  if (!confirmed) return;
   if (!id) return; 
-
-        console.log("SDddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
-            console.log(title_employeeData)
-            console.log("SDddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd")
   try {
       const response =  await fetch(`${TITLE_EMPLOYEE_API_URL}userTitle/delete/?id=${title_employeeData.IDNhanVien}&idt=${title_employeeData.IDChucDanh}&idp=${title_employeeData.IDPhongBan}`, {
           method: 'DELETE',
+           headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
       });
       const result =await response.json();
              if (result.StatusCode !=  200) {
@@ -694,7 +844,7 @@ const handleAddHE = async (e) => {
     newtitle_employeeData.IDNhanVien = parseInt(id);
     const response= await fetch(`${HEALTH_INSURANCE_EMPLOYEE_API_URL}user/insuranceUser/creat/?id=${newtitle_employeeData.IDNhanVien}&ids=${newtitle_employeeData.IDBaoHiem}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
       body: JSON.stringify(newtitle_employeeData),
     });
    
@@ -717,11 +867,14 @@ const handleAddHE = async (e) => {
 };
 const handleEditHE = async (e) => {
   e.preventDefault();
+     const confirmed = await confirm();
+  if (!confirmed) return;
   try {
     const response = await fetch(`${HEALTH_INSURANCE_EMPLOYEE_API_URL}user/insuranceUser/update/?id=${parseInt(id)}&ids=${hi_employData.IDBaoHiem}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(hi_employData),
     });
@@ -745,9 +898,12 @@ const handleEditHE = async (e) => {
 };
 const handleDeleteHE = async (id) => {
   if (!id) return; 
+     const confirmed = await confirm();
+  if (!confirmed) return;
   try {
       await fetch(`${HEALTH_INSURANCE_EMPLOYEE_API_URL}/${id}`, {
           method: 'DELETE',
+           headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
       });
       toast.success('bảo hiểm nhân viên đã được xóa thành công!', {
           position: "top-right",
@@ -799,6 +955,7 @@ const handleAddEE = async (e) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+         headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
       },
       body: JSON.stringify(education_employeeData),
     });
@@ -816,9 +973,12 @@ const handleAddEE = async (e) => {
 };
 const handleRemoveEE = async (id) => {
   if (!id) return; 
+     const confirmed = await confirm();
+  if (!confirmed) return;
   try {
       await fetch(`${EDUCATION_EMPLOYEE_API_URL}user/education/Delete/?id=${id}`, {
           method: 'DELETE',
+           headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
       });
       toast.success('Học Vấn đã được xóa thành công!', {
           position: "top-right",
@@ -838,13 +998,15 @@ const handleRemoveEE = async (id) => {
   };
 const handleEditEE = async (e) => {
   e.preventDefault();
+     const confirmed = await confirm();
+  if (!confirmed) return;
   if (!editingId) {
     return; 
   }
   try {
     const response = await fetch(`${EDUCATION_EMPLOYEE_API_URL}user/education/Update/?id=${editingId}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
       body: JSON.stringify(education_employeeData),
     });
     if (!response.ok) {
@@ -1076,7 +1238,7 @@ return (
                           <th>Ngày Bắt Đầu</th>
                           <th>Ngày Kết Thúc</th>
                       </tr>
-                      {title_employee.map((item, index) => (
+                      {title_employee&&title_employee.length>0?title_employee.map((item, index) => (
                         
                         <tr>
                             <td>{index+1}</td>
@@ -1119,7 +1281,7 @@ return (
                         </div>
                             )}
                         </tr>
-                      ))}
+                      )):""}
                     </table>
                     <button type="button" className='btn-them' onClick={openInsertTE}>Thêm</button>
                   </form>
@@ -1137,25 +1299,25 @@ return (
                               <div className='input-title'>Chức Danh</div>
                               <select name="IDChucDanh" onChange={(e)=>setTitle_employeeData({...title_employeeData,IDChucDanh:parseInt(e.target.value)})} value={title_employeeData.IDChucDanh} >
                                 <option value="">Chọn Chức Danh</option>
-                                  {title.map(item => (
+                                  {title && title.length>0?title.map(item => (
                                   <option key={item.ID} value={item.ID}>{item.TenChucDanh}</option>
-                                  ))}
+                                  )):""}
                               </select>
                               
                               <div className='input-title'>Chi Nhánh</div>
                               <select name="IDChiNhanh" onChange={handleBranchChange} >
                                 <option value="">Chọn Chi Nhánh</option>
-                                {branch.map(item => (
+                                {branch&&branch.length>0?branch.map(item => (
                                 <option key={item.ID} value={item.ID}>{item.ChiNhanh}</option>
-                                ))}
+                                )):""}
                               </select>
 
                               <div className='input-title'>Phòng Ban</div>
                               <select name="IDPhongBan" value={selectedDepartment} onChange={handleDepartmentChange } >
                                 <option value="">Chọn Phòng Ban</option>
-                                {department &&department.map(item => (
+                                {department && department.length? department.map(item => (
                                 <option key={item.ID} value={parseInt(item.ID)}>{item.TenPhongBan}</option>
-                                ))}
+                                )):""}
                               </select>
 
                               <div className='input-title'>Ngày Bắt Đầu </div>
@@ -1312,7 +1474,7 @@ return (
                           <th>Ngày Đóng</th>
                           <th>Ngày Hết Hạn</th>
                       </tr>
-                      {hi_employ.map((item, index) => (
+                      {hi_employ&&hi_employ.length>0?hi_employ.map((item, index) => (
                         <tr key={item.ID}>
                             <td>{index+1}</td>
                             <td>{getHealthNameById(item.IDBaoHiem)}</td>
@@ -1345,7 +1507,7 @@ return (
                         </div>
                             )}
                         </tr>
-                      ))}
+                      )):""}
                     </table>
                     <button type="button" className='btn-them' onClick={openInsertHE}>Thêm</button>
                   </form>

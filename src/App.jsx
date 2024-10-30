@@ -4,6 +4,7 @@ import Home from "./page/Home/Home";
 import Header from "./component/Header/Header";
 import Sidebar from "./component/Sidebar/Sidebar";
 import Personal from "./page/Personnal/Personal";
+import User from "./page/Role/user"
 import { useState } from "react";
 import Employee from "./page/Employee/Employee";
 import EmployeeDetail from "./page/Employee/Detail/EmployeeDetail"; 
@@ -31,7 +32,7 @@ import Talents from "./page/EmployeeLifeCycle/Talents/Talents";
 import EmployeeSeparation from "./page/EmployeeLifeCycle/EmployeeSeparation/EmployeeSeparation";
 import TrainningNewEmployeePrototype from "./page/EmployeeLifeCycle/TrainningNewEmployeePrototype/TrainningNewEmployeePrototype";
 import EmployeeSeparationPrototype from "./page/EmployeeLifeCycle/EmployeeSeparationPrototype/EmployeeSeparationPrototype";
-
+import EmployeeRole from "./page/Role/EmployeeRole/EmployeeRole"
 import { useParams } from 'react-router-dom';
 const App = () => {
   const location = useLocation();
@@ -55,6 +56,8 @@ const App = () => {
   const isTrainningNewEmployeePrototype = location.pathname === "/app/trainning_new_employee_prototype";
   const isEmployeeSeparationPrototype = location.pathname === "/app/employee_separation_prototype";
   const isEmployeeDetailRoute = location.pathname.startsWith('/employee/');
+
+  const isEmployeeRole = location.pathname === "/user/employee_role" ;
   const [menu, setMenu] = useState("Trang Chủ");
   const [click, setClick] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -73,13 +76,9 @@ const App = () => {
   };
 
   useEffect(() => {}, [isSidebarOpen]);
-  // useEffect(() => {
-  //   if (isLoginOpen) {
-  //     document.body.classList.add('login-open');
-  //   } else {
-  //     document.body.classList.remove('login-open');
-  //   }
-  // }, [isLoginOpen]);
+  useEffect(() => {
+    // localStorage.getItem('token')?setIsLoginOpen(false):setIsLoginOpen(true)
+  }, [isLoginOpen]);
 
   
   return (
@@ -88,17 +87,19 @@ const App = () => {
       {isDialogInsertOpen && (
         <Insert setIsDialogInsertOpen={setIsDialogInsertOpen} />
       )}
-     
+      {isLoginOpen  ? (
+        <Login isLoginOpen={isLoginOpen} setIsLoginOpen={setIsLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      ):""}
       <div id="main" className={isLoginOpen ? 'blur' : ''}>
           <Navbar  pathshortcut={pathshortcut} setPathshortcut={setPathshortcut} menu={menu} setMenu={setMenu} path={path} setPath={setPath} clickLink={clickLink} setClickLink={setClickLink} />
-        <div id="main">
+      
           <div className="app">
-            {!isTrainningNewEmployee && !isEmployeeSkillMap && !isEmployeeSkill && !isEmployeePromotion && !isEmployeeTransfer && !isTypeOfTalent && !isTalents && !isEmployeeSeparation && !isTrainningNewEmployeePrototype && !isEmployeeSeparationPrototype &&  !isEmployeeHealthInsurance && !isEmployeeGroup && !isEmployeeLevel && !isEmployeeTitle && !isDepartment && !isBranch && !isEmployeeType &&!isEmployeeRoute && !isEmployeeDetailRoute && (
+            {!isEmployeeRole&& !isTrainningNewEmployee && !isEmployeeSkillMap && !isEmployeeSkill && !isEmployeePromotion && !isEmployeeTransfer && !isTypeOfTalent && !isTalents && !isEmployeeSeparation && !isTrainningNewEmployeePrototype && !isEmployeeSeparationPrototype &&  !isEmployeeHealthInsurance && !isEmployeeGroup && !isEmployeeLevel && !isEmployeeTitle && !isDepartment && !isBranch && !isEmployeeType &&!isEmployeeRoute && !isEmployeeDetailRoute && (
               <Header   isDialogInsertOpen={isDialogInsertOpen} className="a"  menu={menu} setMenu={setMenu} onHeaderClick={handleHeaderClick} 
               />
             )}
             <div className={`main-content ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-              {!isTrainningNewEmployee && !isEmployeeSkillMap && !isEmployeeSkill && !isEmployeePromotion && !isEmployeeTransfer && !isTypeOfTalent && !isTalents && !isEmployeeSeparation && !isTrainningNewEmployeePrototype && !isEmployeeSeparationPrototype &&  !isEmployeeHealthInsurance && !isEmployeeGroup && !isEmployeeLevel && !isEmployeeTitle && !isDepartment && !isBranch && !isEmployeeType && !isEmployeeRoute && !isEmployeeDetailRoute && isSidebarOpen && (
+              {!isEmployeeRole && !isTrainningNewEmployee && !isEmployeeSkillMap && !isEmployeeSkill && !isEmployeePromotion && !isEmployeeTransfer && !isTypeOfTalent && !isTalents && !isEmployeeSeparation && !isTrainningNewEmployeePrototype && !isEmployeeSeparationPrototype &&  !isEmployeeHealthInsurance && !isEmployeeGroup && !isEmployeeLevel && !isEmployeeTitle && !isDepartment && !isBranch && !isEmployeeType && !isEmployeeRoute && !isEmployeeDetailRoute && isSidebarOpen && (
                 <Sidebar  menu={menu} setMenu={setMenu} click={click}setClick={setClick} path={path}setPath={setPath}/>
               )}
               <div className="content">
@@ -124,12 +125,17 @@ const App = () => {
                   <Route path="/app/employee_separation" element={<EmployeeSeparation/>} />
                   <Route path="/app/trainning_new_employee_prototype" element={<TrainningNewEmployeePrototype/>} />
                   <Route path="/app/employee_separation_prototype" element={<EmployeeSeparationPrototype/>} />
+
+
+                  <Route  path="/user"  element={ <User  pathshortcut={pathshortcut} setPathshortcut={setPathshortcut} clickLink={clickLink}setClickLink={setClickLink} click={click} setClick={setClick} /> } />
+                  <Route path="/user/employee_role" element={<EmployeeRole/>} />
                 </Routes>
+
               </div>
             </div>
           </div>
         </div>
-      </div>
+      
     </>
   );
 };

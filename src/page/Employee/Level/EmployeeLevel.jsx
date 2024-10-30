@@ -6,6 +6,8 @@ import { Filter } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
+import { confirmAlert } from 'react-confirm-alert'; 
+import 'react-confirm-alert/src/react-confirm-alert.css'; 
 import API from '../../../api/apiConfig'
 const API_URL = API.APIALL; 
 
@@ -21,20 +23,33 @@ const EmployeeLevel = () => {
     CauTrucLuong: "",
   });
   const [capbac, setCapbac] = useState([]);
-
+const token = localStorage.getItem('token');
   useEffect(() => {
     fetchLevel();
   }, []);
 
   const fetchLevel = async () => {
     try {
-      const response = await fetch(`${API_URL}level/selectAll`);
+      const response = await fetch(`${API_URL}level/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
       const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
       const data = await result.Data;
+   
       setCapbac(data);
       setSelectedItems(data.map(() => false)); 
     } catch (error) {
-      console.error('Error fetching employee levels:', error);
+      toast.error(error.message, {
+        position: "top-right",
+      });
     }
   };
 
@@ -83,7 +98,7 @@ const EmployeeLevel = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    const isDuplicate = capbac.some(item => item.TenCapBac === capbacData.TenCapBac);
+    const isDuplicate = capbac && capbac.length > 0 ?capbac.some(item => item.TenCapBac === capbacData.TenCapBac):false;
         if (isDuplicate) {
             toast.error('Cấp Bậc Nhân Viên đã tồn tại!', {
                 position: "top-right",
@@ -96,7 +111,7 @@ const EmployeeLevel = () => {
       newCapbac.CauTrucLuong = parseInt(newCapbac.CauTrucLuong);
       const response =  await fetch(`${API_URL}level/creat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
         body: JSON.stringify(newCapbac),
       });
       const result = await response.json();
@@ -115,14 +130,34 @@ const EmployeeLevel = () => {
       });
     }
   };
+   const confirm = () => {
+  return new Promise((resolve) => {
+    confirmAlert({
+      title: 'Xác nhận sửa đổi',
+      message: 'Bạn có chắc chắn muốn sửa đổi thông tin này không?',
+      buttons: [
+        {
+          label: 'Đồng ý',
+          onClick: () => resolve(true),
+        },
+        {
+          label: 'Hủy',
+          onClick: () => resolve(false), 
+        }
+      ]
+    });
+  });
+};
 
   const handleEdit = async (e) => {
     e.preventDefault(); 
     if (!editingId) return; 
+     const confirmed = await confirm();
+  if (!confirmed) return;
     try {
       const response = await fetch(`${API_URL}level/update/?id=${editingId}`, { 
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
         body: JSON.stringify(capbacData),
       });
       const result = await response.json();
@@ -145,8 +180,11 @@ const EmployeeLevel = () => {
 
   const handleRemove = async (id) => {
     if (!id) return; 
+      const confirmed = await confirm();
+  if (!confirmed) return;
     try {
       const response =  await fetch(`${API_URL}level/delete/?id=${id}`, {
+         headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
         method: 'DELETE',
       });
       const result = await response.json();
@@ -252,7 +290,7 @@ const EmployeeLevel = () => {
               <b>Cấp Bậc</b>
               <b>Cấu Trúc Lương</b>
             </div>
-            {capbac.map((item, index) => (
+            { capbac && capbac.length > 0 ?capbac.map((item, index) => (
               <div className='employee-type-format' key={item.ID}>
                 <div>
                   <input type="checkbox" checked={selectedItems[index]} onChange={handleItemChange(index)} />
@@ -294,7 +332,7 @@ const EmployeeLevel = () => {
                   </div>
                 )}
               </div>
-            ))}
+            )):""}
           </div>
         </div>
         <ToastContainer />

@@ -1,32 +1,37 @@
 import React from 'react'
-import "./Department.css";
-import FilterHeader from '../../component/FilterHeader/FilterHeader';
-import FilterSidebar from '../../component/FilterSidebar/FilterSidebar';
+import FilterHeader from '../../../component/FilterHeader/FilterHeader';
+import FilterSidebar from '../../../component/FilterSidebar/FilterSidebar';
 import { useState } from 'react';
-import { Filter} from 'lucide-react';
+import { Filter,Pencil} from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import API from '../../api/apiConfig'
+import API from '../../../api/apiConfig'
 import { confirmAlert } from 'react-confirm-alert'; 
 import 'react-confirm-alert/src/react-confirm-alert.css'; 
-const Department = () => {
+const EmployeeRole = () => {
 const [selectAll, setSelectAll] = useState(false);
 const [selectedItems, setSelectedItems] = useState([]);
 const [insert, setInsert] = useState(false);
   const [edit, setEdit] = useState(false);
   const [editingId, setEditingId] = useState(null); 
-  const [phongbanData, setPhongBanData] = useState({
-    TenPhongBan: "",
-    IDChiNhanh:0,
+  const [RoleUserData, setRoleUserData] = useState({
+    IDChucDanh:0,
+    IDVaiTro:0,
+    Xem:false,
+    Them:false,
+    Sua:false,
+    Xoa:false,
   });
-const [branches, setBranches] = useState([]);
-  const [phongban,setPhongban]=useState([]);
+const [roles, setRole] = useState([]);
+const [titles, setTitle] = useState([]);
+  const [RoleUser,setRoleUser]=useState([]);
   const token = localStorage.getItem('token');
   useEffect(() => {
-    fetchDepartment();
-    fetchBranches();
+    fetchRoleUser();
+    fetchRole();
+    fetchTitle();
   }, []);
    const confirm = () => {
   return new Promise((resolve) => {
@@ -46,9 +51,9 @@ const [branches, setBranches] = useState([]);
     });
   });
 };
-  const fetchBranches = async () => {
+  const fetchRole = async () => {
     try {
-      const response = await fetch(`${API.APIALL}branch/selectAll`,{
+      const response = await fetch(`${API.APIALL}role/selectAll`,{
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -62,15 +67,17 @@ const [branches, setBranches] = useState([]);
       }
       const data = await result.Data;
 
-      console.log('Fetched branches:', data); 
-      setBranches(data);
+      console.log('Fetched roles:', data); 
+      setRole(data);
     } catch (error) {
-      console.error('Error fetching branches:', error);
+      console.error('Error fetching roles:', error);
     }
   };
-  const fetchDepartment = async () => {
+
+
+   const fetchTitle = async () => {
     try {
-      const response = await fetch(`${API.APIALL}department/selectAll`,{
+      const response = await fetch(`${API.APIALL}title/selectAll`,{
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -83,9 +90,29 @@ const [branches, setBranches] = useState([]);
         throw new Error(`${errorMessage}`);
       }
       const data = await result.Data;
-      setPhongban(data);
+      setTitle(data);
+    } catch (error) {
+      console.error('Error fetching title:', error);
+    }
+  };
+  const fetchRoleUser = async () => {
+    try {
+      const response = await fetch(`${API.APIALL}userrole/selectAll`,{
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+      const result = await response.json();
+         if(result.StatusCode != 200){
+          const errorMessage = await result.Message;
+        throw new Error(`${errorMessage}`);
+      }
+      const data = await result.Data;
+      setRoleUser(data);
       setSelectedItems(data.map(() => false)); 
-      console.log('Rendering EmployeeType component', phongban);
+      console.log('Rendering EmployeeType component', RoleUser);
     } catch (error) {
       toast.error(error.message, {
         position: "top-right",
@@ -99,21 +126,28 @@ const [branches, setBranches] = useState([]);
 
   const closeInsert = () => {
     setInsert(false);
-    setPhongBanData({TenPhongBan: "",
-      IDChiNhanh:0,}); 
+    setRoleUserData({ IDChucDanh:0,
+    IDVaiTro:0,
+    Xem:false,
+    Them:false,
+    Sua:false,
+    Xoa:false,}); 
   };
 
-  const openEdit = (id) => {
-    const itemToEdit = phongban.find(item => item.ID == id);
-    setPhongBanData(itemToEdit);
-    setEditingId(id); 
+  const openEdit = (idc, idv) => {
+    const itemToEdit = RoleUser.find(item => item.IDChucDanh == idc && item.IDVaiTro == idv);
+    setRoleUserData(itemToEdit);
     setEdit(true);
   };
 
   const closeEdit = () => {
     setEdit(false);
-    setPhongBanData({TenPhongBan: "",
-      IDChiNhanh:0, });  
+    setRoleUserData({ IDChucDanh:0,
+    IDVaiTro:0,
+    Xem:false,
+    Them:false,
+    Sua:false,
+    Xoa:false,});  
   };
 
   const handleSelectAllChange = (event) => {
@@ -132,26 +166,34 @@ const [branches, setBranches] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setPhongBanData(prevData => ({
+    setRoleUserData(prevData => ({
       ...prevData,
       [name]: value
     }));
   };
+  const handleCheckboxChange = (e) => {
+  const { name, checked } = e.target;
+  setRoleUserData((prevData) => ({
+    ...prevData,
+    [name]: checked,
+  }));
+};
   const handleSave = async (e) => {
     e.preventDefault();
-    const isDuplicate = phongban && phongban.length > 0 ? phongban.some(item => item.TenPhongBan.toLowerCase() == phongbanData.TenPhongBan.toLowerCase() && item.IDChiNhanh == phongbanData.IDChiNhanh):false;
+    const isDuplicate = RoleUser && RoleUser.length > 0 ? RoleUser.some(item => item.IDVaiTro == RoleUserData.IDVaiTro && item.IDChucDanh == RoleUserData.IDChucDanh):false;
         if (isDuplicate) {
-            toast.error('Phòng Bạn đã tồn tại!', {
+            toast.error('Quyền đã tồn tại!', {
                 position: "top-right",
             });
             return;
         }
     try {
       const newDepartment = {
-        ...phongbanData,
+        ...RoleUserData,
       };
-      newDepartment.IDChiNhanh = parseInt(newDepartment.IDChiNhanh)
-      const response =await fetch(`${API.APIALL}department/creat`, {
+      newDepartment.IDChucDanh = parseInt(newDepartment.IDChucDanh)
+      newDepartment.IDVaiTro = parseInt(newDepartment.IDVaiTro)
+      const response =await fetch(`${API.APIALL}userrole/creat/?idt=${newDepartment.IDChucDanh}&idr=${newDepartment.IDVaiTro}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
         body: JSON.stringify(newDepartment),
@@ -160,10 +202,10 @@ const [branches, setBranches] = useState([]);
       if (result.StatusCode!=200) {
                 throw new Error(result.Message);
             }
-      toast.success('Phòng ban mới đã được tạo thành công!', {
+      toast.success('Phân Quyền mới đã được tạo thành công!', {
         position: "top-right",
       });
-      fetchDepartment();
+      fetchRoleUser();
       closeInsert();
     } catch (error) {
       toast.error(error.message, {
@@ -175,14 +217,15 @@ const [branches, setBranches] = useState([]);
   const handleEdit =async (e) => {
     e.preventDefault();
      const confirmed = await confirm();
-  if (!confirmed) return;
-    if (!editingId) return; 
-    phongbanData.IDChiNhanh = parseInt(phongbanData.IDChiNhanh)
+  if (!confirmed) return; 
+    RoleUserData.IDChucDanh = parseInt(RoleUserData.IDChucDanh)
+        RoleUserData.IDVaiTro = parseInt(RoleUserData.IDVaiTro)
+
     try {
-      const response = await fetch(`${API.APIALL}department/update/?id=${editingId}`, { 
+      const response = await fetch(`${API.APIALL}userrole/update/?idt=${RoleUserData.IDChucDanh}&idr=${RoleUserData.IDVaiTro}`, { 
         method: 'PUT',
         headers: { 'Content-Type': 'application/json','Authorization': `Bearer ${token}` },
-        body: JSON.stringify(phongbanData),
+        body: JSON.stringify(RoleUserData),
       });
       const result = await response.json();
       if (result.StatusCode != 200) {
@@ -193,7 +236,7 @@ const [branches, setBranches] = useState([]);
       toast.success('Thông tin phòng ban đã cập nhật', {
         position: "top-right",
       });
-      fetchDepartment(); // Đảm bảo fetch lại dữ liệu
+      fetchRoleUser(); // Đảm bảo fetch lại dữ liệu
       closeEdit(); 
     } catch (error) {
       toast.error(error.message, {
@@ -207,7 +250,7 @@ const [branches, setBranches] = useState([]);
      const confirmed = await confirm();
   if (!confirmed) return;
     try {
-       const response =  await fetch(`${API.APIALL}department/delete/?id=${id}`, {
+       const response =  await fetch(`${API.APIALL}userrole/delete/?idt=${RoleUserData.IDChucDanh}&idr=${ RoleUserData.IDVaiTro}`, {
             method: 'DELETE',
              headers: { 'Content-Type': 'application/json' ,'Authorization': `Bearer ${token}`},
         });
@@ -219,17 +262,23 @@ const [branches, setBranches] = useState([]);
         toast.success('Phòng Ban đã được xóa thành công!', {
             position: "top-right",
         });
-        fetchDepartment(); 
+        fetchRoleUser(); 
+         closeEdit(); 
     } catch (error) {
         toast.error(error.message, {
             position: "top-right",
         });
     }
   };
-  const getBranchNameById = (id) => {
-    const branch = branches.find(branch => branch.ID === id);
-    return branch ? branch.ChiNhanh : 'Unknown';
+  const getRoleNameById = (id) => {
+    const branch = roles.find(branch => branch.ID === id);
+    return branch ? branch.Ten : 'Unknown';
   };
+const getTitleNameById = (id) => {
+    const branch = titles.find(branch => branch.ID === id);
+    return branch ? branch.TenChucDanh : 'Unknown';
+  };
+
   const handleRemoveSelected = async () => {
     const selectedIds = employeeTypes
         .filter((_, index) => selectedItems[index])
@@ -261,8 +310,8 @@ const [branches, setBranches] = useState([]);
   return (
     <div className='branch'>
       <FilterHeader handleRemoveSelected={handleRemoveSelected}/>
-      <FilterSidebar/>
-      <div className='branch-table'>
+
+      <div className='employeeRole-table'>
         <div className="branch-table-header">
               <div className="branch-search-filter">
                   <input className="branch-search-filter-input" type="text" placeholder='Tìm Kiếm' />
@@ -275,34 +324,46 @@ const [branches, setBranches] = useState([]);
     <div className='employee-type-insert'>
       <div className='employee-type-insert-insert'>
         <div className="employee-type-title-insert">
-          Thêm Phòng Ban
+          Thêm Phân Quyền
         </div>
         <div className="employee-type-input-insert">
-        <form onSubmit={handleSave}>
-            <input
-              type="text"
-              onChange={handleChange}
-              name="TenPhongBan"
-              placeholder="Nhập Phòng Ban"
-              required
-            />
-            <select
-              name="IDChiNhanh"
-              value={phongbanData.IDChiNhanh}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Chọn Chi Nhánh</option>
-              {branches && branches.length >0 ?branches.map(branch => (
-                <option key={branch.ID} value={branch.ID}>{branch.ChiNhanh}</option>
-              )):(<option >Không có chi nhánh nào</option>)}
-            </select>
-          </form>
-        </div>
-        <div className="employee-type-save">
+       <form onSubmit={handleSave}>
+              <div className="input-insert">
+                Chức danh
+                  <select
+                        name="IDChucDanh"
+                        onChange={handleChange}
+                        required
+                        >
+                        <option value="">Chọn chức danh</option>
+                        {titles && titles.length >0 ?titles.map(title => (
+                            <option key={title.ID} value={title.ID}>{getTitleNameById(title.ID)}</option>
+                        )):(<option >Không có chức danh nào</option>)}
+                        </select>
+                Vai trò
+                 <select
+                        name="IDVaiTro"
+                        onChange={handleChange}
+                        required
+                        >
+                        <option value="">Chọn vai trò</option>
+                        {roles && roles.length >0 ?roles.map(role => (
+                            <option key={role.ID} value={role.ID}>{getRoleNameById(role.ID)}</option>
+                        )):(<option >Không có vai trò nào</option>)}
+                        </select>
+                        Xem     <input type="checkbox" name="Xem" onChange={handleCheckboxChange}  checked={RoleUserData.Xem}/> 
+                        Thêm    <input type="checkbox" name="Them" onChange={handleCheckboxChange}  checked={RoleUserData.Them}/>
+                        Sửa     <input type="checkbox"  onChange={handleCheckboxChange} name="Sua" checked={RoleUserData.Sua}/> 
+                        Xóa     <input type="checkbox"  onChange={handleCheckboxChange} name="Xoa" checked={RoleUserData.Xoa}/> 
+              </div>
+            <div className="employee-type-save">
           <button className="employee-type-save-save" onClick={handleSave}>Lưu</button>
           <button className="employee-type-save-exit" onClick={closeInsert}>X</button>
         </div>
+        </form>
+        </div>
+        
+        
       </div>
     </div>
   </div>
@@ -315,45 +376,54 @@ const [branches, setBranches] = useState([]);
         <div className="branch-table-filter">
         <div className="branch-table-contain">
             <div className="branch-format-title">
-            <b><input type="checkbox" checked={selectAll} 
-                        onChange={handleSelectAllChange} /></b>
-            <b>Phòng Ban</b>
-            <b>Chi Nhánh</b>
+            <b>Loại Tài Liệu</b>
+            <b>Chức Danh</b>
+            <b>Quyền</b>
         </div>
-        {phongban && phongban.length> 0 ?phongban.map((item, index) => (
+        {RoleUser && RoleUser.length> 0 ?RoleUser.map((item, index) => (
   <div className='employee-type-format' key={item.ID}>
+    <div onClick={() => openEdit(item.IDChucDanh, item.IDVaiTro)}>{getRoleNameById(item.IDVaiTro)}</div>
+    <div onClick={() => openEdit(item.IDChucDanh, item.IDVaiTro)}>{getTitleNameById(item.IDChucDanh)}</div>
+    <div onClick={() => openEdit(item.IDChucDanh, item.IDVaiTro)}>  
     <div>
-      <input type="checkbox" checked={selectedItems[index]} onChange={handleItemChange(index)} />
+      <input type="checkbox" name="Xem" checked={item.Xem}/> Xem
+      <input type="checkbox" name="Them" checked={item.Them}/> Thêm
+    </div>     
+    <div>
+      <input type="checkbox" name="Sua" checked={item.Sua}/> Sửa
+      <input type="checkbox" name="Xoa" checked={item.Xoa}/> Xóa
     </div>
-    <div onClick={() => openEdit(item.ID)}>{item.TenPhongBan}</div>
-    <div onClick={() => openEdit(item.ID)}>{getBranchNameById(item.IDChiNhanh)}</div>
-    {edit && editingId === item.ID && (
+    </div>
+    {edit && (
       <div className='overlay'>
         <div className='insert'>
           <div className='insert-insert'>
             <div className="title-insert">
-              Cập Nhật Phòng Ban
+              Cập Nhật Quyền
             </div>
             <form onSubmit={handleEdit}>
               <div className="input-insert">
+                Chức danh
                 <input
                   type="text"
-                  onChange={handleChange}
-                  value={phongbanData.TenPhongBan}
-                  name="TenPhongBan"
+                  value={getTitleNameById(RoleUserData.IDChucDanh)}
                   required
                 />
-                <select name="IDChiNhanh" value={phongbanData.IDChiNhanh} onChange={handleChange}>
-                  <option value="">Chọn Chi Nhánh</option>
-                  {branches.map(branch => (
-                    <option key={branch.ID} value={branch.ID}>{branch.ChiNhanh}</option>
-                  ))}
-                </select>
+                Vai trò
+                <input
+                  type="text"
+                     value={getRoleNameById(RoleUserData.IDVaiTro)}
+                  required
+                />
+                         Xem    <input type="checkbox" name="Xem" onChange={handleCheckboxChange}  checked={RoleUserData.Xem}/> 
+                        Thêm   <input type="checkbox" name="Them" onChange={handleCheckboxChange}  checked={RoleUserData.Them}/>
+                 Sửa<input type="checkbox"  onChange={handleCheckboxChange} name="Sua" checked={RoleUserData.Sua}/> 
+                     Xóa<input type="checkbox"  onChange={handleCheckboxChange} name="Xoa" checked={RoleUserData.Xoa}/> 
               </div>
               <div className="save">
                 <button className="employee-type-save-save" type="submit">Cập Nhật</button>
                 <button className="employee-type-save-exit" type="button" onClick={closeEdit}>X</button>
-                <button className="employee-type-save-remove" type="button" onClick={() => handleRemove(item.ID)}>Xóa</button>
+                <button className="employee-type-save-remove" type="button" onClick={ handleRemove}>Xóa</button>
               </div>
             </form>
           </div>
@@ -370,4 +440,4 @@ const [branches, setBranches] = useState([]);
 );
 }
 
-export default Department
+export default EmployeeRole

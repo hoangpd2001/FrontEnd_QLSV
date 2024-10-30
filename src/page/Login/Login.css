@@ -1,24 +1,23 @@
  .login-container {
     justify-content: center;
     align-items: center;
-    height: 500px;
-    width: 400px;
-    position: absolute;
-    z-index: 1;
+    height: 100vh;
+    width: 100vw;
+    position:fixed;
+    z-index: 10;
     display: grid;
-    padding-left: 855px;
-    padding-top: 200px;
-  
+    background-color: rgba(3, 21, 29, 0.7);
   }
   
   
   .login-box {
     background-color: white;
-    padding: 20px;
+    padding: 30px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 360px;
+    width: 450px;
     text-align: center;
+    position: relative;
   }
   
   .login-icon img.logo {
@@ -82,4 +81,21 @@
   .login-button button:hover {
     background-color: #0056b3;
   }
-  
+  .button-login{
+    float: right;
+    border-radius: 5px;
+  }
+  .button-login> button{
+      border: none;
+    border-radius: 5px;
+    background-color: #c8e9f3;
+  }
+  .editPass{
+  background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 450px;
+    text-align: center;
+    position: fixed;
+  }

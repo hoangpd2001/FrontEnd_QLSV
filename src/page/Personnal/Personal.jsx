@@ -3,6 +3,8 @@ import "./Personal.css";
 import Shortcut from '../../component/Shortcut/Shortcut';
 import Report from '../../component/Report/Report';
 import SalaryChart from '../../component/SalaryChart/SalaryChart';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useEffect } from 'react';
 const Personal = ({click,setClick,clickLink,setClickLink,pathshortcut,setPathshortcut}) => {
   const data=[
@@ -152,6 +154,7 @@ const Personal = ({click,setClick,clickLink,setClickLink,pathshortcut,setPathsho
         < Report title="Báo Cáo Khác" items={another_report} />
         < Report title="Tài Liệu Tùy Chỉnh" items={document} />
       </div>
+      <ToastContainer />
     </div>
 
   )
